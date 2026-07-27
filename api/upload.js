@@ -33,10 +33,11 @@ module.exports = async (req, res) => {
     const filename = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
     const blob = await put(filename, buffer, {
-      access: 'public',
-      contentType,
-      addRandomSuffix: false,
-    });
+  access: 'public',
+  contentType,
+  addRandomSuffix: false,
+  storeId: process.env.PHOTOS_STORE_ID,
+});
 
     res.status(200).json({ url: blob.url, pathname: blob.pathname });
   } catch (err) {

@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { blobs } = await list({ prefix: 'uploads/' });
+    const { blobs } = await list({ prefix: 'uploads/', storeId: process.env.PHOTOS_STORE_ID });
     const photos = blobs
       .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
       .map((b) => ({ url: b.url, uploadedAt: b.uploadedAt }));
