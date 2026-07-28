@@ -1,5 +1,20 @@
 const { list } = require('@vercel/blob');
 
+function extractName(pathname){
+  try{
+    const file = pathname.split('/').pop(); // e.g. 172839-ab12cd--bmFtZQ.jpg
+    const base = file.replace(/\.[a-z0-9]+$/i, '');
+    const parts = base.split('--');
+    if(parts.length < 2) return null;
+    const tag = parts[parts.length - 1];
+    const decoded = Buffer.from(tag, 'base64url').toString('utf8');
+    if(!decoded || decoded.length > 60) return null;
+    return decoded;
+  }catch(e){
+    return null;
+  }
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -13,7 +28,7 @@ module.exports = async (req, res) => {
     const { blobs } = await list({ prefix: 'uploads/', storeId: process.env.PHOTOS_STORE_ID });
     const photos = blobs
       .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-      .map((b) => ({ url: b.url, uploadedAt: b.uploadedAt }));
+      .map((b) => ({ url: b.url, uploadedAt: b.uploadedAt, name: extractName(b.pathname) }));
     res.status(200).json({ photos, count: photos.length });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Could not list photos', photos: [] });
