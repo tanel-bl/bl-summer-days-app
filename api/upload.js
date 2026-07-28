@@ -1,9 +1,18 @@
 const { put } = require('@vercel/blob');
 
+function sanitizeName(raw){
+  let name = 'Guest';
+  try { name = decodeURIComponent(raw || 'Guest'); } catch(e) { name = raw || 'Guest'; }
+  name = name.trim().slice(0, 40);
+  if(!name) name = 'Guest';
+  // encode safely for use inside a filename segment
+  return Buffer.from(name, 'utf8').toString('base64url');
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Uploader-Name');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -30,7 +39,8 @@ module.exports = async (req, res) => {
     else if (contentType.includes('webp')) ext = 'webp';
     else if (contentType.includes('heic')) ext = 'heic';
 
-    const filename = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const nameTag = sanitizeName(req.headers['x-uploader-name']);
+    const filename = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}--${nameTag}.${ext}`;
 
     const blob = await put(filename, buffer, {
   access: 'public',
