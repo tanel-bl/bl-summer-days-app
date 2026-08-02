@@ -29,7 +29,7 @@ module.exports = async (req, res) => {
         .filter(b => b.ts > since)
         .sort((a, b) => a.ts - b.ts);
 
-      const messages = await Promise.all(
+      const fetched = await Promise.all(
         relevant.map(async (b) => {
           try {
             const r = await fetch(b.url, { cache: 'no-store' });
@@ -40,7 +40,21 @@ module.exports = async (req, res) => {
         })
       );
 
-      const clean = messages.filter(Boolean);
+      // Flatten: legacy blobs stored a whole array snapshot; new blobs store a single message object.
+      const seen = new Set();
+      const clean = [];
+      for (const item of fetched) {
+        if (!item) continue;
+        const list = Array.isArray(item) ? item : [item];
+        for (const m of list) {
+          if (m && m.id && !seen.has(m.id)) {
+            seen.add(m.id);
+            clean.push(m);
+          }
+        }
+      }
+      clean.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+
       const latestTs = relevant.length ? relevant[relevant.length - 1].ts : since;
 
       res.status(200).json({ messages: clean, latestTs });
