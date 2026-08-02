@@ -1,6 +1,10 @@
 const { put, list } = require('@vercel/blob');
 
-const MAX_MESSAGES = 500;
+function parseTimestamp(pathname){
+  const file = pathname.split('/').pop() || '';
+  const n = parseInt(file.split('-')[0], 10);
+  return Number.isFinite(n) ? n : 0;
+}
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,17 +20,32 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     try {
+      const url = new URL(req.url, 'http://internal');
+      const since = parseInt(url.searchParams.get('since'), 10) || 0;
       const { blobs } = await list({ prefix: 'chat/', storeId });
-      if (!blobs.length) {
-        res.status(200).json({ messages: [] });
-        return;
-      }
-      const latest = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
-      const r = await fetch(latest.url);
-      const messages = await r.json();
-      res.status(200).json({ messages });
+
+      const relevant = blobs
+        .map(b => ({ ...b, ts: parseTimestamp(b.pathname) }))
+        .filter(b => b.ts > since)
+        .sort((a, b) => a.ts - b.ts);
+
+      const messages = await Promise.all(
+        relevant.map(async (b) => {
+          try {
+            const r = await fetch(b.url, { cache: 'no-store' });
+            return await r.json();
+          } catch (e) {
+            return null;
+          }
+        })
+      );
+
+      const clean = messages.filter(Boolean);
+      const latestTs = relevant.length ? relevant[relevant.length - 1].ts : since;
+
+      res.status(200).json({ messages: clean, latestTs });
     } catch (err) {
-      res.status(200).json({ messages: [], warning: err.message });
+      res.status(200).json({ messages: [], latestTs: 0, warning: err.message });
     }
     return;
   }
@@ -46,38 +65,23 @@ module.exports = async (req, res) => {
         return;
       }
 
-      // read current messages
-      let messages = [];
-      const { blobs } = await list({ prefix: 'chat/', storeId });
-      if (blobs.length) {
-        const latest = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
-        try {
-          const r = await fetch(latest.url);
-          messages = await r.json();
-          if (!Array.isArray(messages)) messages = [];
-        } catch (e) { messages = []; }
-      }
-
-      messages.push({
-        id: 'm-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      const ts = Date.now();
+      const message = {
+        id: 'm-' + ts + '-' + Math.random().toString(36).slice(2, 7),
         name,
         text,
-        ts: new Date().toISOString(),
-      });
+        ts: new Date(ts).toISOString(),
+      };
 
-      if (messages.length > MAX_MESSAGES) {
-        messages = messages.slice(messages.length - MAX_MESSAGES);
-      }
-
-      const filename = `chat/${Date.now()}.json`;
-      await put(filename, JSON.stringify(messages), {
+      const filename = `chat/${ts}-${Math.random().toString(36).slice(2, 8)}.json`;
+      await put(filename, JSON.stringify(message), {
         access: 'public',
         contentType: 'application/json',
         addRandomSuffix: false,
         storeId,
       });
 
-      res.status(200).json({ ok: true, messages });
+      res.status(200).json({ ok: true, message, ts });
     } catch (err) {
       res.status(500).json({ error: err.message || 'Send failed' });
     }
