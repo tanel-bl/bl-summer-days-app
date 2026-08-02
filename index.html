@@ -563,7 +563,7 @@
     topTitle.textContent = titles[name];
     if(name === 'camera') loadGallery();
     if(name === 'chat') { loadChat(); startChatPolling(); } else { stopChatPolling(); }
-    if(name === 'chat'){ lastSeenChatCount = lastKnownChatCount; hideChatDot(); }
+    if(name === 'chat'){ hideChatDot(); }
   }
 
   tabBtns.forEach(btn=>{
@@ -715,10 +715,11 @@
   const chatSendBtn = document.getElementById('chatSendBtn');
   const chatDot = document.getElementById('chatDot');
   let chatPollTimer = null;
-  let lastChatCount = 0;
-  let lastSeenChatCount = null;
+  let chatMessagesArr = [];
+  let lastFetchedTs = 0;
   let lastKnownChatCount = 0;
   let chatLoaded = false;
+  const seenChatIds = new Set();
 
   function showChatDot(){ chatDot.style.display = 'block'; }
   function hideChatDot(){ chatDot.style.display = 'none'; }
@@ -728,14 +729,14 @@
     return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   }
 
-  function renderChat(messages){
-    if(!messages.length){
+  function renderChat(){
+    if(!chatMessagesArr.length){
       chatMessages.innerHTML = '<div class="chat-empty">No messages yet — say hi to the group!</div>';
       return;
     }
     const myName = getStoredName();
     const atBottom = chatMessages.scrollTop + chatMessages.clientHeight >= chatMessages.scrollHeight - 40;
-    chatMessages.innerHTML = messages.map(m => {
+    chatMessages.innerHTML = chatMessagesArr.map(m => {
       const isOwn = m.name === myName;
       return '<div class="chat-msg'+(isOwn?' own':'')+'">'
         + (isOwn ? '' : '<div class="cm-name">'+escapeHtml(m.name)+'</div>')
@@ -743,20 +744,44 @@
         + '<div class="cm-time">'+formatChatTime(m.ts)+'</div>'
         + '</div>';
     }).join('');
-    if(atBottom || messages.length !== lastChatCount){
+    if(atBottom){
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
-    lastChatCount = messages.length;
-    lastKnownChatCount = messages.length;
-    if(currentView === 'chat'){ lastSeenChatCount = messages.length; hideChatDot(); }
+  }
+
+  function addNewMessages(newMsgs){
+    let added = false;
+    for(const m of newMsgs){
+      if(!seenChatIds.has(m.id)){
+        seenChatIds.add(m.id);
+        chatMessagesArr.push(m);
+        added = true;
+      }
+    }
+    if(added){
+      chatMessagesArr.sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+      lastKnownChatCount = chatMessagesArr.length;
+    }
+    return added;
+  }
+
+  async function fetchNewChatMessages(){
+    const res = await fetch('/api/chat?since=' + lastFetchedTs);
+    const json = await res.json();
+    const newMsgs = json.messages || [];
+    const added = addNewMessages(newMsgs);
+    if(typeof json.latestTs === 'number' && json.latestTs > lastFetchedTs){
+      lastFetchedTs = json.latestTs;
+    }
+    return added;
   }
 
   async function loadChat(){
     try{
-      const res = await fetch('/api/chat');
-      const json = await res.json();
-      renderChat(json.messages || []);
+      const added = await fetchNewChatMessages();
+      if(added || !chatLoaded) renderChat();
       chatLoaded = true;
+      if(currentView === 'chat') hideChatDot();
     }catch(err){
       if(!chatLoaded){
         chatMessages.innerHTML = '<div class="chat-empty">Could not load chat. Pull down to try again.</div>';
@@ -785,7 +810,11 @@
         body: JSON.stringify({ name: getStoredName() || 'Guest', text })
       });
       const json = await res.json();
-      if(json.messages) renderChat(json.messages);
+      if(json.message){
+        addNewMessages([json.message]);
+        if(json.ts && json.ts > lastFetchedTs) lastFetchedTs = json.ts;
+        renderChat();
+      }
     }catch(err){
       console.error(err);
       chatInput.value = text;
@@ -799,15 +828,8 @@
 
   async function checkChatBackground(){
     try{
-      const res = await fetch('/api/chat');
-      const json = await res.json();
-      const count = (json.messages || []).length;
-      lastKnownChatCount = count;
-      if(lastSeenChatCount === null){
-        lastSeenChatCount = count;
-      } else if(currentView !== 'chat' && count > lastSeenChatCount){
-        showChatDot();
-      }
+      const added = await fetchNewChatMessages();
+      if(added && currentView !== 'chat') showChatDot();
     }catch(err){ /* silent */ }
   }
   checkChatBackground();
