@@ -494,9 +494,10 @@
       <svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6l1.5 3H21a1 1 0 011 1v11a2 2 0 01-2 2H4a2 2 0 01-2-2V7a1 1 0 011-1h4.5L9 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.6"/></svg>
       Camera
     </button>
-    <button class="tab-btn" data-view="chat">
+    <button class="tab-btn" data-view="chat" style="position:relative;">
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 011 1v10a1 1 0 01-1 1H9l-4 3.5V17H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
       Chat
+      <span class="dot" id="chatDot" style="display:none;"></span>
     </button>
     <a class="tab-btn" href="https://t.me/TotuCool" target="_blank" rel="noopener">
       <svg viewBox="0 0 24 24" fill="none"><path d="M21 4.5L2.5 11.6c-1 .4-1 1.8.1 2.1l4.4 1.4 1.7 5.3c.3.9 1.4 1.1 2.1.4l2.5-2.4 4.5 3.3c.8.6 2 .2 2.2-.8L23 5.5c.2-1-.9-1.7-2-1z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
@@ -550,7 +551,10 @@
   const topTitle = document.getElementById('topTitle');
   const titles = { home:'Summer Days 2026', schedule:'Summer Days 2026', challenges:'Challenges', camera:'Photo Wall', chat:'Group Chat' };
 
+  let currentView = 'home';
+
   function goToView(name){
+    currentView = name;
     tabBtns.forEach(b=>b.classList.remove('active'));
     views.forEach(v=>v.classList.remove('active'));
     const btn = document.querySelector('.tab-btn[data-view="'+name+'"]');
@@ -559,6 +563,7 @@
     topTitle.textContent = titles[name];
     if(name === 'camera') loadGallery();
     if(name === 'chat') { loadChat(); startChatPolling(); } else { stopChatPolling(); }
+    if(name === 'chat'){ lastSeenChatCount = lastKnownChatCount; hideChatDot(); }
   }
 
   tabBtns.forEach(btn=>{
@@ -708,9 +713,15 @@
   const chatMessages = document.getElementById('chatMessages');
   const chatInput = document.getElementById('chatInput');
   const chatSendBtn = document.getElementById('chatSendBtn');
+  const chatDot = document.getElementById('chatDot');
   let chatPollTimer = null;
   let lastChatCount = 0;
+  let lastSeenChatCount = null;
+  let lastKnownChatCount = 0;
   let chatLoaded = false;
+
+  function showChatDot(){ chatDot.style.display = 'block'; }
+  function hideChatDot(){ chatDot.style.display = 'none'; }
 
   function formatChatTime(iso){
     const d = new Date(iso);
@@ -736,6 +747,8 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
     lastChatCount = messages.length;
+    lastKnownChatCount = messages.length;
+    if(currentView === 'chat'){ lastSeenChatCount = messages.length; hideChatDot(); }
   }
 
   async function loadChat(){
@@ -783,6 +796,22 @@
 
   chatSendBtn.addEventListener('click', sendChatMessage);
   chatInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') sendChatMessage(); });
+
+  async function checkChatBackground(){
+    try{
+      const res = await fetch('/api/chat');
+      const json = await res.json();
+      const count = (json.messages || []).length;
+      lastKnownChatCount = count;
+      if(lastSeenChatCount === null){
+        lastSeenChatCount = count;
+      } else if(currentView !== 'chat' && count > lastSeenChatCount){
+        showChatDot();
+      }
+    }catch(err){ /* silent */ }
+  }
+  checkChatBackground();
+  setInterval(checkChatBackground, 15000);
 
   // ---------- Register service worker ----------
   if('serviceWorker' in navigator){
