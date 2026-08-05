@@ -1,0 +1,55 @@
+{
+  "1": {
+    "title": "Arrival & Opening",
+    "sub": "Landing in Kuopio, opening drinks at Rauhalahti, dinner at the city's highest table, and a first night at Nuotakota.",
+    "rows": [
+      { "id": "r1-1", "time": "13:05", "what": "Arrival", "where": "Kuopio Airport → transport to Rauhalahti" },
+      { "id": "r1-2", "time": "14:30", "what": "Opening", "where": "Summer Days begin — Rauhalahti Holiday Center" },
+      { "id": "r1-3", "time": "15:45", "what": "Transport", "where": "Rauhalahti → Puijo Tower" },
+      { "id": "r1-4", "time": "16:00", "what": "Opening Lunch", "where": "Puijo Tower Restaurant" },
+      { "id": "r1-5", "time": "17:45", "what": "Transport", "where": "Puijo Tower → Rauhalahti" },
+      { "id": "r1-6", "time": "18:00", "what": "Presentations", "where": "Nuotakota — three-minute team presentations" },
+      { "id": "r1-7", "time": "20:00", "what": "Grill & Sauna", "where": "Nuotakota — sauna and jacuzzi by the lake" },
+      { "id": "r1-8", "time": "00:00", "what": "Lights Out", "where": "" }
+    ]
+  },
+  "2": {
+    "title": "Golf, Water & the City",
+    "sub": "Golfers head to Tahko, everyone else picks jet skis or a city walk, then regroup for the smoke sauna and Kuopio's nightlife.",
+    "rows": [
+      { "id": "r2-1", "time": "07:30", "what": "Breakfast", "where": "Golf players — Rauhalahti Manor" },
+      { "id": "r2-2", "time": "08:30", "what": "Golf", "where": "Tahko Golf Club" },
+      { "id": "r2-3", "time": "09:15", "what": "Breakfast", "where": "Others — Rauhalahti Manor" },
+      { "id": "r2-4", "time": "11:00", "what": "Jet Skis / City Trip", "where": "Others — free choice" },
+      { "id": "r2-5", "time": "13:45", "what": "Transport", "where": "City → Rauhalahti" },
+      { "id": "r2-6", "time": "14:00", "what": "Lunch", "where": "Others — Rauhalahti Summer Restaurant" },
+      { "id": "r2-7", "time": "14:30", "what": "Lunch", "where": "Golf players — at the club" },
+      { "id": "r2-8", "time": "15:00", "what": "Free Time", "where": "Until 17:00" },
+      { "id": "r2-9", "time": "17:30", "what": "Transport", "where": "→ Jätkänkämppä smoke sauna (or walk, 500m)" },
+      { "id": "r2-10", "time": "21:00", "what": "Transport", "where": "Jätkänkämppä → Rauhalahti" },
+      { "id": "r2-11", "time": "22:00", "what": "Nightclub Albatrossi", "where": "Transport to Kuopio's nightlife" },
+      { "id": "r2-12", "time": "00–05", "what": "Shuttle Home", "where": "Albatrossi ↔ Rauhalahti, hourly" }
+    ]
+  },
+  "3": {
+    "title": "Jet Ski Safari & SAANA",
+    "sub": "A full day on the water in three groups, volleyball on the side, and an evening at SAANA — dinner, private sauna, and a live band.",
+    "rows": [
+      { "id": "r3-1", "time": "09:15", "what": "Breakfast", "where": "Rauhalahti Manor" },
+      { "id": "r3-2", "time": "10:00", "what": "Jet Ski Safari & Volleyball", "where": "Three rotating groups — until 17:00" },
+      { "id": "r3-3", "time": "13:00", "what": "Lunch — Louto", "where": "Optional transport, or Rauhalahti Summer Restaurant" },
+      { "id": "r3-4", "time": "17:30", "what": "Transport", "where": "→ SAANA" },
+      { "id": "r3-5", "time": "18:00", "what": "Dinner", "where": "SAANA Restaurant" },
+      { "id": "r3-6", "time": "19–21", "what": "Private Sauna & Live Band", "where": "SAANA — featuring Jukebox" }
+    ]
+  },
+  "4": {
+    "title": "Home",
+    "sub": "A slow last morning, a late check-out, and the flight back to Tallinn.",
+    "rows": [
+      { "id": "r4-1", "time": "09:15", "what": "Breakfast", "where": "Rauhalahti Manor" },
+      { "id": "r4-2", "time": "14:00", "what": "Check-out", "where": "Transport to the airport, or one last city trip" },
+      { "id": "r4-3", "time": "16:00", "what": "Flight Home", "where": "Kuopio → Tallinn" }
+    ]
+  }
+}
