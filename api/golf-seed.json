@@ -1,0 +1,40 @@
+{
+  "players": [
+    { "name": "Gustaf Smith Sander", "hcp": 20, "group": 1 },
+    { "name": "Gregor Kreitsberg", "hcp": 25, "group": 1 },
+    { "name": "Sami Koponen", "hcp": 42, "group": 1 },
+    { "name": "Susanna Bakhouche", "hcp": 62, "group": 1 },
+    { "name": "Oskar Kallenbach", "hcp": 28, "group": 2 },
+    { "name": "Kristo Säde", "hcp": 42, "group": 2 },
+    { "name": "Siim Pukk", "hcp": 42, "group": 2 },
+    { "name": "Tony Hitrov", "hcp": 42, "group": 2 }
+  ],
+  "sideComps": [
+    { "id": "sc1", "hole": 1, "par": 5, "type": "LD", "label": "LD 1 — Longest Drive", "winner": "", "note": "" },
+    { "id": "sc2", "hole": 4, "par": 3, "type": "CTP", "label": "CTP 1 — Closest to Pin", "winner": "", "note": "" },
+    { "id": "sc3", "hole": 6, "par": 5, "type": "LD", "label": "LD 2 — Longest Drive", "winner": "", "note": "" },
+    { "id": "sc4", "hole": 7, "par": 3, "type": "CTP", "label": "CTP 2 — Closest to Pin", "winner": "", "note": "" },
+    { "id": "sc5", "hole": 12, "par": 3, "type": "CTP", "label": "CTP 3 — Closest to Pin", "winner": "", "note": "" },
+    { "id": "sc6", "hole": 15, "par": 5, "type": "LD", "label": "LD 3 — Longest Drive", "winner": "", "note": "" },
+    { "id": "sc7", "hole": 16, "par": 3, "type": "CTP", "label": "CTP 4 — Closest to Pin", "winner": "", "note": "" },
+    { "id": "sc8", "hole": 18, "par": 5, "type": "LD", "label": "LD 4 — Longest Drive", "winner": "", "note": "" }
+  ],
+  "propeller": [
+    { "hole": 1, "initials": "" }, { "hole": 2, "initials": "" }, { "hole": 3, "initials": "" },
+    { "hole": 4, "initials": "" }, { "hole": 5, "initials": "" }, { "hole": 6, "initials": "" },
+    { "hole": 7, "initials": "" }, { "hole": 8, "initials": "" }, { "hole": 9, "initials": "" },
+    { "hole": 10, "initials": "" }, { "hole": 11, "initials": "" }, { "hole": 12, "initials": "" },
+    { "hole": 13, "initials": "" }, { "hole": 14, "initials": "" }, { "hole": 15, "initials": "" },
+    { "hole": 16, "initials": "" }, { "hole": 17, "initials": "" }, { "hole": 18, "initials": "" }
+  ],
+  "results": [
+    { "name": "Gustaf Smith Sander", "hcp": 20, "points": "", "position": "" },
+    { "name": "Gregor Kreitsberg", "hcp": 25, "points": "", "position": "" },
+    { "name": "Oskar Kallenbach", "hcp": 28, "points": "", "position": "" },
+    { "name": "Sami Koponen", "hcp": 42, "points": "", "position": "" },
+    { "name": "Kristo Säde", "hcp": 42, "points": "", "position": "" },
+    { "name": "Siim Pukk", "hcp": 42, "points": "", "position": "" },
+    { "name": "Tony Hitrov", "hcp": 42, "points": "", "position": "" },
+    { "name": "Susanna Bakhouche", "hcp": 62, "points": "", "position": "" }
+  ]
+}
