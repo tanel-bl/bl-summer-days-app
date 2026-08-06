@@ -82,6 +82,49 @@
   .sq-item-body{padding:12px 14px;}
   .sq-item-name{font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:0.02em; color:#f5a623;}
   .sq-item-caption{font-size:13.5px; margin-top:4px; line-height:1.4;}
+
+  /* ---------- Golf Challenge ---------- */
+  .golf-group-title{font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-dim); margin:18px 0 10px;}
+  .golf-group-title:first-child{margin-top:0;}
+  .golf-player-card{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; margin-bottom:8px;
+  }
+  .golf-player-name{font-weight:700; font-size:14px;}
+  .golf-player-hcp{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-dim);}
+
+  .golf-comp-row{
+    display:flex; align-items:center; gap:12px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; margin-bottom:8px;
+  }
+  .golf-comp-info{flex:1; min-width:0;}
+  .golf-comp-label{font-weight:700; font-size:13px;}
+  .golf-comp-hole{font-size:11px; color:var(--ink-dim); font-family:'IBM Plex Mono', monospace; margin-top:1px;}
+  .golf-comp-winner{font-size:13px; margin-top:4px;}
+  .golf-comp-winner .empty{color:var(--ink-dim); font-style:italic;}
+  .golf-comp-note{font-size:11.5px; color:var(--ink-dim); margin-top:1px;}
+
+  .propeller-grid{display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; margin-top:6px;}
+  .propeller-cell{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:10px 4px; text-align:center;
+  }
+  .propeller-cell .ph-hole{font-size:9.5px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.03em;}
+  .propeller-cell .ph-initials{font-weight:800; font-size:14px; margin-top:3px; font-family:'IBM Plex Mono', monospace;}
+  .propeller-cell .ph-initials.empty{color:var(--ink-dim); font-weight:400; font-size:11px;}
+  .propeller-cell.filled{border-color:rgba(245,166,35,0.4); background:rgba(245,166,35,0.08);}
+
+  .golf-results-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; margin-bottom:8px;
+  }
+  .golf-results-info{flex:1; min-width:0;}
+  .golf-results-name{font-weight:700; font-size:13.5px;}
+  .golf-results-meta{font-size:11.5px; color:var(--ink-dim); font-family:'IBM Plex Mono', monospace; margin-top:2px;}
+  .golf-results-pts{font-family:'IBM Plex Mono', monospace; font-weight:800; font-size:15px; text-align:right; min-width:44px;}
   .name-submit{
     width:100%; max-width:280px; margin-top:14px;
     background:var(--white); color:var(--bg);
@@ -468,6 +511,14 @@
           <div class="cl-sub">Do something extra, snap the proof →</div>
         </div>
       </button>
+
+      <button type="button" class="spotify-link" id="golfHomeBtn" style="border:1px solid var(--line); cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#7ec87e"><path d="M6 21V4" stroke-width="1.6" stroke-linecap="round"/><path d="M6 4l9 3.2L6 10.4" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="6" cy="21" rx="4" ry="1.2" stroke-width="1.4"/></svg>
+        <div>
+          <div class="cl-title">Golf Challenge</div>
+          <div class="cl-sub">Tahko scorecard, side comps & propeller →</div>
+        </div>
+      </button>
     </div>
 
     <!-- ============ SCHEDULE VIEW ============ -->
@@ -560,6 +611,32 @@
       <div id="sqFeed" class="sq-feed"></div>
     </div>
 
+    <div class="view" id="view-golf">
+      <div class="day-chips" id="golfSubTabs">
+        <button class="day-chip active" data-golf-tab="groups">Groups</button>
+        <button class="day-chip" data-golf-tab="comps">Side Comps</button>
+        <button class="day-chip" data-golf-tab="propeller">Propeller</button>
+        <button class="day-chip" data-golf-tab="results">Results</button>
+      </div>
+      <div id="golfContent"></div>
+    </div>
+
+    <!-- ============ GOLF EDIT MODAL ============ -->
+    <div class="modal-overlay" id="golfModalOverlay">
+      <div class="modal">
+        <h3 id="golfModalTitle">Edit</h3>
+        <div class="field" id="golfFieldWinner"><label>Winner</label><input type="text" id="golfFWinner" placeholder="Player name"></div>
+        <div class="field" id="golfFieldNote"><label>Distance / Note</label><input type="text" id="golfFNote" placeholder="e.g. 4.2m"></div>
+        <div class="field" id="golfFieldInitials"><label>Who 3-putted?</label><input type="text" id="golfFInitials" placeholder="e.g. TH" maxlength="10"></div>
+        <div class="field" id="golfFieldPoints"><label>Stableford Points</label><input type="text" id="golfFPoints" placeholder="e.g. 34"></div>
+        <div class="field" id="golfFieldPosition"><label>Position</label><input type="text" id="golfFPosition" placeholder="e.g. 1st"></div>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="golfBtnCancel">Cancel</button>
+          <button class="btn-save" id="golfBtnSave">Save</button>
+        </div>
+      </div>
+    </div>
+
     <div class="view" id="view-chat">
       <div class="chat-wrap">
         <div class="chat-messages" id="chatMessages"></div>
@@ -648,7 +725,7 @@
   const tabBtns = document.querySelectorAll('.tab-btn[data-view]');
   const views = document.querySelectorAll('.view');
   const topTitle = document.getElementById('topTitle');
-  const titles = { home:'Summer Days 2026', schedule:'Summer Days 2026', challenges:'Challenges', camera:'Photo Wall', chat:'Group Chat', sidequest:'Side Quest' };
+  const titles = { home:'Summer Days 2026', schedule:'Summer Days 2026', challenges:'Challenges', camera:'Photo Wall', chat:'Group Chat', sidequest:'Side Quest', golf:'Golf Challenge' };
 
   let currentView = 'home';
 
@@ -662,6 +739,7 @@
     topTitle.textContent = titles[name];
     if(name === 'camera') loadGallery();
     if(name === 'sidequest') loadSideQuestFeed();
+    if(name === 'golf') loadGolf();
     if(name === 'chat') { loadChat(); startChatPolling(); } else { stopChatPolling(); }
     if(name === 'chat'){ hideChatDot(); }
   }
@@ -1082,6 +1160,204 @@
       console.error(err);
     }
   }
+
+  // ---------- Golf Challenge ----------
+  document.getElementById('golfHomeBtn').addEventListener('click', ()=> goToView('golf'));
+
+  let golfData = { players: [], sideComps: [], propeller: [], results: [] };
+  let currentGolfTab = 'groups';
+  let golfLoaded = false;
+  let golfEditKind = null;
+  let golfEditId = null;
+
+  const golfContent = document.getElementById('golfContent');
+  const golfSubTabs = document.getElementById('golfSubTabs');
+  const golfModalOverlay = document.getElementById('golfModalOverlay');
+  const golfModalTitle = document.getElementById('golfModalTitle');
+
+  golfSubTabs.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-golf-tab]');
+    if(!btn) return;
+    golfSubTabs.querySelectorAll('.day-chip').forEach(c=>c.classList.remove('active'));
+    btn.classList.add('active');
+    currentGolfTab = btn.dataset.golfTab;
+    renderGolfContent();
+  });
+
+  async function loadGolf(){
+    try{
+      const res = await fetch('/api/golf');
+      const json = await res.json();
+      golfData = json.data || golfData;
+      golfLoaded = true;
+      renderGolfContent();
+    }catch(err){
+      if(!golfLoaded){
+        golfContent.innerHTML = '<div class="day-sub">Could not load golf data. Pull down to try again.</div>';
+      }
+      console.error(err);
+    }
+  }
+
+  async function saveGolf(){
+    try{
+      await fetch('/api/golf', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(golfData)
+      });
+    }catch(err){
+      showToast('Could not save — check connection');
+      console.error(err);
+    }
+  }
+
+  function renderGolfContent(){
+    if(currentGolfTab === 'groups') renderGolfGroups();
+    else if(currentGolfTab === 'comps') renderGolfComps();
+    else if(currentGolfTab === 'propeller') renderGolfPropeller();
+    else if(currentGolfTab === 'results') renderGolfResults();
+  }
+
+  function renderGolfGroups(){
+    const groups = {1:[], 2:[]};
+    (golfData.players||[]).forEach(p => { if(groups[p.group]) groups[p.group].push(p); });
+    golfContent.innerHTML = [1,2].map(g => `
+      <div class="golf-group-title">Group ${g}${g===1?' — first out':''}</div>
+      ${groups[g].map(p => `
+        <div class="golf-player-card">
+          <div class="golf-player-name">${escapeHtml(p.name)}</div>
+          <div class="golf-player-hcp">HCP ${escapeHtml(String(p.hcp))}</div>
+        </div>
+      `).join('')}
+    `).join('');
+  }
+
+  function renderGolfComps(){
+    const comps = golfData.sideComps || [];
+    golfContent.innerHTML = comps.map(c => `
+      <div class="golf-comp-row" data-comp-edit="${c.id}">
+        <div class="golf-comp-info">
+          <div class="golf-comp-label">${escapeHtml(c.label)}</div>
+          <div class="golf-comp-hole">Hole ${c.hole} · Par ${c.par}</div>
+          <div class="golf-comp-winner">${c.winner ? escapeHtml(c.winner) : '<span class="empty">No winner yet</span>'}</div>
+          ${c.note ? `<div class="golf-comp-note">${escapeHtml(c.note)}</div>` : ''}
+        </div>
+        <button class="row-edit-btn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    `).join('');
+    golfContent.querySelectorAll('[data-comp-edit]').forEach(row=>{
+      row.addEventListener('click', ()=> openGolfModal('comp', row.dataset.compEdit));
+    });
+  }
+
+  function renderGolfPropeller(){
+    const holes = golfData.propeller || [];
+    golfContent.innerHTML = `
+      <div class="day-sub" style="margin-bottom:14px;">The three-putt curse. Tap a hole to record who three-putted there.</div>
+      <div class="propeller-grid">
+        ${holes.map(h => `
+          <div class="propeller-cell${h.initials ? ' filled' : ''}" data-prop-edit="${h.hole}">
+            <div class="ph-hole">Hole ${h.hole}</div>
+            <div class="ph-initials${h.initials ? '' : ' empty'}">${h.initials ? escapeHtml(h.initials) : '—'}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    golfContent.querySelectorAll('[data-prop-edit]').forEach(cell=>{
+      cell.addEventListener('click', ()=> openGolfModal('propeller', cell.dataset.propEdit));
+    });
+  }
+
+  function renderGolfResults(){
+    const results = golfData.results || [];
+    golfContent.innerHTML = results.map(r => `
+      <div class="golf-results-row" data-results-edit="${escapeHtml(r.name)}">
+        <div class="golf-results-info">
+          <div class="golf-results-name">${escapeHtml(r.name)}</div>
+          <div class="golf-results-meta">HCP ${escapeHtml(String(r.hcp))}${r.position ? ' · ' + escapeHtml(r.position) : ''}</div>
+        </div>
+        <div class="golf-results-pts">${r.points ? escapeHtml(String(r.points)) : '—'}</div>
+      </div>
+    `).join('');
+    golfContent.querySelectorAll('[data-results-edit]').forEach(row=>{
+      row.addEventListener('click', ()=> openGolfModal('results', row.dataset.resultsEdit));
+    });
+  }
+
+  const golfFieldWinner = document.getElementById('golfFieldWinner');
+  const golfFieldNote = document.getElementById('golfFieldNote');
+  const golfFieldInitials = document.getElementById('golfFieldInitials');
+  const golfFieldPoints = document.getElementById('golfFieldPoints');
+  const golfFieldPosition = document.getElementById('golfFieldPosition');
+
+  function openGolfModal(kind, id){
+    golfEditKind = kind;
+    golfEditId = id;
+    golfFieldWinner.style.display = 'none';
+    golfFieldNote.style.display = 'none';
+    golfFieldInitials.style.display = 'none';
+    golfFieldPoints.style.display = 'none';
+    golfFieldPosition.style.display = 'none';
+
+    if(kind === 'comp'){
+      const c = (golfData.sideComps||[]).find(x => x.id === id);
+      golfModalTitle.textContent = c ? c.label : 'Edit competition';
+      golfFieldWinner.style.display = 'block';
+      golfFieldNote.style.display = 'block';
+      document.getElementById('golfFWinner').value = c ? (c.winner||'') : '';
+      document.getElementById('golfFNote').value = c ? (c.note||'') : '';
+    } else if(kind === 'propeller'){
+      const h = (golfData.propeller||[]).find(x => String(x.hole) === String(id));
+      golfModalTitle.textContent = 'Hole ' + id + ' — Propeller';
+      golfFieldInitials.style.display = 'block';
+      document.getElementById('golfFInitials').value = h ? (h.initials||'') : '';
+    } else if(kind === 'results'){
+      const r = (golfData.results||[]).find(x => x.name === id);
+      golfModalTitle.textContent = r ? r.name : 'Edit result';
+      golfFieldPoints.style.display = 'block';
+      golfFieldPosition.style.display = 'block';
+      document.getElementById('golfFPoints').value = r ? (r.points||'') : '';
+      document.getElementById('golfFPosition').value = r ? (r.position||'') : '';
+    }
+    golfModalOverlay.classList.add('open');
+  }
+
+  function closeGolfModal(){
+    golfModalOverlay.classList.remove('open');
+    golfEditKind = null;
+    golfEditId = null;
+  }
+
+  document.getElementById('golfBtnCancel').addEventListener('click', closeGolfModal);
+  golfModalOverlay.addEventListener('click', (e)=>{ if(e.target === golfModalOverlay) closeGolfModal(); });
+
+  document.getElementById('golfBtnSave').addEventListener('click', async ()=>{
+    if(golfEditKind === 'comp'){
+      const c = (golfData.sideComps||[]).find(x => x.id === golfEditId);
+      if(c){
+        c.winner = document.getElementById('golfFWinner').value.trim();
+        c.note = document.getElementById('golfFNote').value.trim();
+      }
+    } else if(golfEditKind === 'propeller'){
+      const h = (golfData.propeller||[]).find(x => String(x.hole) === String(golfEditId));
+      if(h){
+        h.initials = document.getElementById('golfFInitials').value.trim().toUpperCase();
+      }
+    } else if(golfEditKind === 'results'){
+      const r = (golfData.results||[]).find(x => x.name === golfEditId);
+      if(r){
+        r.points = document.getElementById('golfFPoints').value.trim();
+        r.position = document.getElementById('golfFPosition').value.trim();
+      }
+    }
+    closeGolfModal();
+    renderGolfContent();
+    await saveGolf();
+    showToast('Saved');
+  });
 
   // ---------- Group chat ----------
   const chatMessages = document.getElementById('chatMessages');
