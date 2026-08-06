@@ -63,6 +63,25 @@
     text-align:center;
   }
   .name-input:focus{outline:none; border-color:var(--ink-dim);}
+
+  .sq-caption-input{
+    width:100%; max-width:320px; margin:0 auto 18px;
+    display:block;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:12px 16px; color:var(--ink); font-family:inherit; font-size:14px;
+    text-align:center;
+  }
+  .sq-caption-input:focus{outline:none; border-color:var(--ink-dim);}
+
+  .sq-feed{display:flex; flex-direction:column; gap:12px;}
+  .sq-item{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    overflow:hidden;
+  }
+  .sq-item media, .sq-item img, .sq-item video{width:100%; max-height:340px; object-fit:cover; display:block; background:#000;}
+  .sq-item-body{padding:12px 14px;}
+  .sq-item-name{font-weight:800; font-size:12.5px; text-transform:uppercase; letter-spacing:0.02em; color:#f5a623;}
+  .sq-item-caption{font-size:13.5px; margin-top:4px; line-height:1.4;}
   .name-submit{
     width:100%; max-width:280px; margin-top:14px;
     background:var(--white); color:var(--bg);
@@ -441,6 +460,14 @@
           <div class="cl-sub">Open on Spotify →</div>
         </div>
       </a>
+
+      <button type="button" class="spotify-link" id="sideQuestHomeBtn" style="border:1px solid var(--line); cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.6 5.8L21 9.6l-4.5 4.2L17.6 21 12 17.6 6.4 21l1.1-7.2L3 9.6l6.4-0.8L12 3z" stroke="#f5a623" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        <div>
+          <div class="cl-title">Side Quest</div>
+          <div class="cl-sub">Do something extra, snap the proof →</div>
+        </div>
+      </button>
     </div>
 
     <!-- ============ SCHEDULE VIEW ============ -->
@@ -505,6 +532,32 @@
         <span class="count mono" id="galleryCount">—</span>
       </div>
       <div id="galleryGrid" class="gallery-grid"></div>
+    </div>
+
+    <div class="view" id="view-sidequest">
+      <div class="cam-wrap">
+        <h2>Side Quest</h2>
+        <p>Do something outside our program — anything fun or weird counts. Snap a photo or a short video as proof and share it with the group.<br>Videos over ~4MB won't upload, so keep clips short.</p>
+
+        <input type="text" id="sqCaption" class="sq-caption-input" placeholder="What's your side quest?" maxlength="200" autocomplete="off">
+
+        <button class="shutter" id="sqShutterBtn">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l2.6 5.8L21 9.6l-4.5 4.2L17.6 21 12 17.6 6.4 21l1.1-7.2L3 9.6l6.4-0.8L12 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="shutter-label">Add Photo or Video</div>
+        <input type="file" id="sqFileInput" accept="image/*,video/*" capture="environment">
+      </div>
+
+      <div class="upload-status" id="sqUploadStatus">
+        <div class="spinner" id="sqUploadSpinner"></div>
+        <span id="sqUploadStatusText">Uploading...</span>
+      </div>
+
+      <div class="gallery-head">
+        <h3>Side Quest Wall</h3>
+        <span class="count mono" id="sqCount">—</span>
+      </div>
+      <div id="sqFeed" class="sq-feed"></div>
     </div>
 
     <div class="view" id="view-chat">
@@ -595,7 +648,7 @@
   const tabBtns = document.querySelectorAll('.tab-btn[data-view]');
   const views = document.querySelectorAll('.view');
   const topTitle = document.getElementById('topTitle');
-  const titles = { home:'Summer Days 2026', schedule:'Summer Days 2026', challenges:'Challenges', camera:'Photo Wall', chat:'Group Chat' };
+  const titles = { home:'Summer Days 2026', schedule:'Summer Days 2026', challenges:'Challenges', camera:'Photo Wall', chat:'Group Chat', sidequest:'Side Quest' };
 
   let currentView = 'home';
 
@@ -608,6 +661,7 @@
     document.getElementById('view-'+name).classList.add('active');
     topTitle.textContent = titles[name];
     if(name === 'camera') loadGallery();
+    if(name === 'sidequest') loadSideQuestFeed();
     if(name === 'chat') { loadChat(); startChatPolling(); } else { stopChatPolling(); }
     if(name === 'chat'){ hideChatDot(); }
   }
@@ -929,6 +983,105 @@
   }
   loadGallery();
   setInterval(loadGallery, 20000);
+
+  // ---------- Side Quest ----------
+  document.getElementById('sideQuestHomeBtn').addEventListener('click', ()=> goToView('sidequest'));
+
+  const sqShutterBtn = document.getElementById('sqShutterBtn');
+  const sqFileInput = document.getElementById('sqFileInput');
+  const sqCaption = document.getElementById('sqCaption');
+  const sqUploadStatus = document.getElementById('sqUploadStatus');
+  const sqUploadStatusText = document.getElementById('sqUploadStatusText');
+  const sqUploadSpinner = document.getElementById('sqUploadSpinner');
+  const sqFeed = document.getElementById('sqFeed');
+  const sqCount = document.getElementById('sqCount');
+  let sqFeedLoaded = false;
+
+  sqShutterBtn.addEventListener('click', ()=> sqFileInput.click());
+
+  sqFileInput.addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const MAX_BYTES = 4 * 1024 * 1024;
+
+    sqUploadStatus.className = 'upload-status show';
+    sqUploadSpinner.style.display = 'block';
+    sqUploadStatusText.textContent = isVideo ? 'Preparing video...' : 'Preparing photo...';
+
+    try{
+      let payload, contentType;
+      if(isVideo){
+        if(file.size > MAX_BYTES){
+          throw new Error('Video too large — please use a shorter clip (max ~4MB).');
+        }
+        payload = file;
+        contentType = file.type || 'video/mp4';
+      } else {
+        payload = await compressImage(file, 1600, 0.8);
+        contentType = 'image/jpeg';
+      }
+
+      sqUploadStatusText.textContent = 'Uploading...';
+
+      const res = await fetch('/api/sidequest-upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': contentType,
+          'X-Uploader-Name': encodeURIComponent(getStoredName() || 'Guest'),
+          'X-Caption': encodeURIComponent(sqCaption.value.trim())
+        },
+        body: payload
+      });
+      const data = await res.json();
+      if(!res.ok) throw new Error(data.error || 'Upload failed');
+
+      sqUploadStatus.className = 'upload-status show success';
+      sqUploadSpinner.style.display = 'none';
+      sqUploadStatusText.textContent = 'Posted to the Side Quest wall!';
+      sqCaption.value = '';
+      loadSideQuestFeed();
+
+      setTimeout(()=>{ sqUploadStatus.className = 'upload-status'; }, 2500);
+    }catch(err){
+      sqUploadStatus.className = 'upload-status show error';
+      sqUploadSpinner.style.display = 'none';
+      sqUploadStatusText.textContent = err.message || 'Upload failed — try again';
+      console.error(err);
+    }
+    sqFileInput.value = '';
+  });
+
+  async function loadSideQuestFeed(){
+    try{
+      const res = await fetch('/api/sidequest-list');
+      const data = await res.json();
+      const items = data.items || [];
+      sqCount.textContent = items.length + ' quest' + (items.length===1?'':'s');
+      if(items.length === 0){
+        sqFeed.innerHTML = '<div class="gallery-empty">No side quests yet — be the first!</div>';
+        return;
+      }
+      sqFeed.innerHTML = items.map(it => `
+        <div class="sq-item">
+          ${it.kind === 'video'
+            ? `<video src="${it.url}" controls playsinline></video>`
+            : `<img src="${it.url}" loading="lazy" alt="Side quest">`}
+          <div class="sq-item-body">
+            ${it.name ? `<div class="sq-item-name">${escapeHtml(it.name)}</div>` : ''}
+            ${it.caption ? `<div class="sq-item-caption">${escapeHtml(it.caption)}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+      sqFeedLoaded = true;
+    }catch(err){
+      if(!sqFeedLoaded){
+        sqFeed.innerHTML = '<div class="gallery-empty">Could not load the wall. Pull down to try again.</div>';
+      }
+      console.error(err);
+    }
+  }
 
   // ---------- Group chat ----------
   const chatMessages = document.getElementById('chatMessages');
