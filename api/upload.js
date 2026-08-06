@@ -38,6 +38,16 @@ module.exports = async (req, res) => {
     if (contentType.includes('png')) ext = 'png';
     else if (contentType.includes('webp')) ext = 'webp';
     else if (contentType.includes('heic')) ext = 'heic';
+    else if (contentType.includes('mp4')) ext = 'mp4';
+    else if (contentType.includes('quicktime') || contentType.includes('mov')) ext = 'mov';
+    else if (contentType.includes('webm')) ext = 'webm';
+    else if (contentType.startsWith('video/')) ext = 'mp4';
+
+    const MAX_BYTES = 4 * 1024 * 1024; // ~4MB safety cap for serverless body size
+    if (buffer.length > MAX_BYTES) {
+      res.status(413).json({ error: 'File too large — please use a shorter video or smaller photo (max ~4MB).' });
+      return;
+    }
 
     const nameTag = sanitizeName(req.headers['x-uploader-name']);
     const filename = `uploads/${Date.now()}-${Math.random().toString(36).slice(2, 8)}--${nameTag}.${ext}`;
