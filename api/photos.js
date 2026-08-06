@@ -15,6 +15,11 @@ function extractName(pathname){
   }
 }
 
+function extractKind(pathname){
+  const ext = (pathname.split('.').pop() || '').toLowerCase();
+  return ['mp4','mov','webm'].includes(ext) ? 'video' : 'image';
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -28,7 +33,7 @@ module.exports = async (req, res) => {
     const { blobs } = await list({ prefix: 'uploads/', storeId: process.env.PHOTOS_STORE_ID });
     const photos = blobs
       .sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))
-      .map((b) => ({ url: b.url, uploadedAt: b.uploadedAt, name: extractName(b.pathname) }));
+      .map((b) => ({ url: b.url, uploadedAt: b.uploadedAt, name: extractName(b.pathname), kind: extractKind(b.pathname) }));
     res.status(200).json({ photos, count: photos.length });
   } catch (err) {
     res.status(500).json({ error: err.message || 'Could not list photos', photos: [] });
