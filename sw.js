@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bl-summer-days-v9';
+const CACHE_NAME = 'bl-summer-days-v10';
 const PRECACHE = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
