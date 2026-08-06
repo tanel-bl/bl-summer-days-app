@@ -361,6 +361,14 @@
 
   .gallery-item{position:relative; overflow:hidden; border-radius:6px; aspect-ratio:1; background:var(--panel);}
   .gallery-item img{width:100%; height:100%; object-fit:cover; display:block;}
+  .gallery-item video{width:100%; height:100%; object-fit:cover; display:block; background:#000;}
+  .gallery-item .gi-play{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:32px; height:32px; border-radius:50%;
+    background:rgba(0,0,0,0.55); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; pointer-events:none;
+  }
   .gallery-item .gi-name{
     position:absolute; left:0; right:0; bottom:0;
     padding:4px 6px 5px;
@@ -591,13 +599,13 @@
     <div class="view" id="view-camera">
       <div class="cam-wrap">
         <h2>Photo Wall</h2>
-        <p>Snap a photo — it uploads straight to the shared gallery below.<br>Nothing is saved to your camera roll.</p>
+        <p>Snap a photo or a short video (max ~4MB) — it uploads straight to the shared gallery below.<br>Nothing is saved to your camera roll.</p>
 
         <button class="shutter" id="shutterBtn">
           <svg viewBox="0 0 24 24" fill="none"><path d="M9 3h6l1.5 3H21a1 1 0 011 1v11a2 2 0 01-2 2H4a2 2 0 01-2-2V7a1 1 0 011-1h4.5L9 3z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" stroke="currentColor" stroke-width="2"/></svg>
         </button>
-        <div class="shutter-label">Take Photo</div>
-        <input type="file" id="fileInput" accept="image/*" capture="environment">
+        <div class="shutter-label">Add Photo or Video</div>
+        <input type="file" id="fileInput" accept="image/*,video/*" capture="environment">
       </div>
 
       <div class="upload-status" id="uploadStatus">
@@ -1026,19 +1034,32 @@
     const file = e.target.files[0];
     if(!file) return;
 
+    const isVideo = file.type.startsWith('video/');
+    const MAX_VIDEO_BYTES = 4 * 1024 * 1024;
+
     uploadStatus.className = 'upload-status show';
     uploadSpinner.style.display = 'block';
-    uploadStatusText.textContent = 'Preparing photo...';
+    uploadStatusText.textContent = isVideo ? 'Preparing video...' : 'Preparing photo...';
 
     try{
-      const compressed = await compressImage(file, 1600, 0.8);
+      let payload, contentType;
+      if(isVideo){
+        if(file.size > MAX_VIDEO_BYTES){
+          throw new Error('Video too large — please use a shorter clip (max ~4MB).');
+        }
+        payload = file;
+        contentType = file.type || 'video/mp4';
+      } else {
+        payload = await compressImage(file, 1600, 0.8);
+        contentType = 'image/jpeg';
+      }
 
       uploadStatusText.textContent = 'Uploading...';
 
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'image/jpeg', 'X-Uploader-Name': encodeURIComponent(getStoredName() || 'Guest') },
-        body: compressed
+        headers: { 'Content-Type': contentType, 'X-Uploader-Name': encodeURIComponent(getStoredName() || 'Guest') },
+        body: payload
       });
       const data = await res.json();
       if(!res.ok) throw new Error(data.error || 'Upload failed');
@@ -1052,7 +1073,7 @@
     }catch(err){
       uploadStatus.className = 'upload-status show error';
       uploadSpinner.style.display = 'none';
-      uploadStatusText.textContent = 'Upload failed — try again';
+      uploadStatusText.textContent = err.message || 'Upload failed — try again';
       console.error(err);
     }
     fileInput.value = '';
@@ -1072,12 +1093,26 @@
       const res = await fetch('/api/photos');
       const data = await res.json();
       const photos = data.photos || [];
-      galleryCount.textContent = photos.length + ' photo' + (photos.length===1?'':'s');
+      galleryCount.textContent = photos.length + ' item' + (photos.length===1?'':'s');
       if(photos.length === 0){
         galleryGrid.innerHTML = '<div class="gallery-empty" style="grid-column:1/-1;">No photos yet — be the first to take one!</div>';
         return;
       }
-      galleryGrid.innerHTML = photos.map(p=>'<div class="gallery-item"><img src="'+p.url+'" loading="lazy" alt="Event photo">'+(p.name ? '<div class="gi-name">'+escapeHtml(p.name)+'</div>' : '')+'</div>').join('');
+      galleryGrid.innerHTML = photos.map(p=>'<div class="gallery-item">'+(p.kind === 'video' ? '<video src="'+p.url+'" muted playsinline preload="metadata"></video><div class="gi-play">▶</div>' : '<img src="'+p.url+'" loading="lazy" alt="Event photo">')+(p.name ? '<div class="gi-name">'+escapeHtml(p.name)+'</div>' : '')+'</div>').join('');
+      galleryGrid.querySelectorAll('.gallery-item video').forEach(vid=>{
+        vid.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const playIcon = vid.nextElementSibling;
+          if(vid.paused){
+            vid.muted = false;
+            vid.controls = true;
+            vid.play();
+            if(playIcon && playIcon.classList.contains('gi-play')) playIcon.style.display = 'none';
+          } else {
+            vid.pause();
+          }
+        });
+      });
       galleryLoaded = true;
     }catch(err){
       if(!galleryLoaded){
