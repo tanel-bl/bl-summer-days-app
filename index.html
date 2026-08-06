@@ -125,6 +125,33 @@
   .golf-results-name{font-weight:700; font-size:13.5px;}
   .golf-results-meta{font-size:11.5px; color:var(--ink-dim); font-family:'IBM Plex Mono', monospace; margin-top:2px;}
   .golf-results-pts{font-family:'IBM Plex Mono', monospace; font-weight:800; font-size:15px; text-align:right; min-width:44px;}
+
+  .propeller-rules{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px; font-size:13px; line-height:1.6;
+  }
+  .propeller-rules-sub{color:var(--ink-dim); font-size:12px; margin-bottom:12px;}
+  .propeller-rules ol{padding-left:18px; display:flex; flex-direction:column; gap:8px;}
+  .propeller-rules li{color:var(--ink);}
+  .propeller-rules b{color:var(--ink); font-weight:800;}
+
+  .sc-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -20px; padding:0 20px;}
+  .scorecard-table{border-collapse:collapse; font-size:11.5px; white-space:nowrap;}
+  .scorecard-table th, .scorecard-table td{
+    border:1px solid var(--line); padding:6px 8px; text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .scorecard-table th{background:var(--panel); color:var(--ink-dim); font-weight:700; text-transform:uppercase; font-size:10px;}
+  .scorecard-table .sc-hole{font-weight:800; color:var(--ink);}
+  .scorecard-table .sc-comp{font-size:9.5px; color:#f5a623; font-weight:700;}
+  .scorecard-table .sc-subtotal td{background:rgba(255,255,255,0.04); font-weight:700; color:var(--ink-dim);}
+  .scorecard-table .sc-total td{background:rgba(245,166,35,0.1); font-weight:800; color:var(--ink);}
+  .sc-input{
+    width:28px; background:none; border:none; color:var(--ink);
+    text-align:center; font-family:'IBM Plex Mono', monospace; font-size:12px;
+    padding:2px;
+  }
+  .sc-input:focus{outline:1px solid var(--ink-dim); border-radius:4px;}
   .name-submit{
     width:100%; max-width:280px; margin-top:14px;
     background:var(--white); color:var(--bg);
@@ -1255,8 +1282,29 @@
 
   function renderGolfPropeller(){
     const holes = golfData.propeller || [];
+    const groups = {1:[], 2:[]};
+    (golfData.players||[]).forEach(p => { if(groups[p.group]) groups[p.group].push(p); });
     golfContent.innerHTML = `
-      <div class="day-sub" style="margin-bottom:14px;">The three-putt curse. Tap a hole to record who three-putted there.</div>
+      <div class="golf-group-title">Group 1 — first out</div>
+      ${groups[1].map(p => `<div class="golf-player-card"><div class="golf-player-name">${escapeHtml(p.name)}</div><div class="golf-player-hcp">HCP ${escapeHtml(String(p.hcp))}</div></div>`).join('')}
+      <div class="golf-group-title">Group 2</div>
+      ${groups[2].map(p => `<div class="golf-player-card"><div class="golf-player-name">${escapeHtml(p.name)}</div><div class="golf-player-hcp">HCP ${escapeHtml(String(p.hcp))}</div></div>`).join('')}
+
+      <div class="golf-group-title" style="margin-top:22px;">Propeller Boy / Girl</div>
+      <div class="propeller-rules">
+        <div class="propeller-rules-sub">The three-putt curse · runs all 18 holes · costs nothing, ruins friendships</div>
+        <ol>
+          <li>The <b>first player to three-putt</b> puts on the propeller hat. Immediately, on the green, no negotiation.</li>
+          <li>The hat <b>transfers</b> to the next player who three-putts. You wear it until someone else fails.</li>
+          <li>It must be <b>visibly worn</b> at all times — on the tee, in the buggy, in the group photo.</li>
+          <li><b>Whoever is wearing the propeller walking off the 18th green buys the round of beers for everyone.</b></li>
+          <li>A <b>four-putt</b> means you cannot pass the hat on until you have played one further hole.</li>
+          <li>Conceded putts do not count. If it is not holed out, it is not a three-putt.</li>
+          <li>Photo evidence on the 18th green is mandatory. No photo, no glory.</li>
+        </ol>
+      </div>
+
+      <div class="golf-group-title" style="margin-top:22px;">Tap a hole to record who three-putted</div>
       <div class="propeller-grid">
         ${holes.map(h => `
           <div class="propeller-cell${h.initials ? ' filled' : ''}" data-prop-edit="${h.hole}">
@@ -1271,9 +1319,20 @@
     });
   }
 
+  function golfHoleTotal(playerName, range){
+    const scores = (golfData.scores||{})[playerName] || [];
+    let sum = 0, any = false;
+    range.forEach(i=>{ const v = parseInt(scores[i],10); if(Number.isFinite(v)){ sum += v; any = true; } });
+    return any ? sum : '';
+  }
+
   function renderGolfResults(){
     const results = golfData.results || [];
-    golfContent.innerHTML = results.map(r => `
+    golfContent.innerHTML = `<div class="golf-group-title">Scorecard</div><div id="golfScorecardWrap"></div><div class="golf-group-title" style="margin-top:22px;">Stableford Results</div><div id="golfResultsWrap"></div>`;
+
+    renderGolfScorecardInto(document.getElementById('golfScorecardWrap'));
+
+    document.getElementById('golfResultsWrap').innerHTML = results.map(r => `
       <div class="golf-results-row" data-results-edit="${escapeHtml(r.name)}">
         <div class="golf-results-info">
           <div class="golf-results-name">${escapeHtml(r.name)}</div>
@@ -1282,8 +1341,69 @@
         <div class="golf-results-pts">${r.points ? escapeHtml(String(r.points)) : '—'}</div>
       </div>
     `).join('');
-    golfContent.querySelectorAll('[data-results-edit]').forEach(row=>{
+    document.getElementById('golfResultsWrap').querySelectorAll('[data-results-edit]').forEach(row=>{
       row.addEventListener('click', ()=> openGolfModal('results', row.dataset.resultsEdit));
+    });
+  }
+
+  function renderGolfScorecardInto(container){
+    const holes = golfData.holes || [];
+    const players = golfData.players || [];
+    const outRange = [0,1,2,3,4,5,6,7,8];
+    const inRange = [9,10,11,12,13,14,15,16,17];
+    const allRange = [...outRange, ...inRange];
+
+    function scoreRow(idx, hole){
+      return `
+        <tr>
+          <td class="sc-hole">${hole.hole}</td>
+          <td>${hole.par}</td>
+          <td>${hole.si}</td>
+          <td class="sc-comp">${hole.comp||''}</td>
+          ${players.map(p => `<td><input type="tel" inputmode="numeric" maxlength="2" class="sc-input" data-player="${escapeHtml(p.name)}" data-hole-idx="${idx}" value="${((golfData.scores||{})[p.name]||[])[idx] || ''}"></td>`).join('')}
+        </tr>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="sc-scroll">
+        <table class="scorecard-table">
+          <thead>
+            <tr>
+              <th>Hole</th><th>Par</th><th>SI</th><th>Comp</th>
+              ${players.map(p => `<th>${escapeHtml(p.name.split(' ')[0])}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${outRange.map(i => scoreRow(i, holes[i])).join('')}
+            <tr class="sc-subtotal">
+              <td colspan="4">OUT</td>
+              ${players.map(p => `<td>${golfHoleTotal(p.name, outRange)}</td>`).join('')}
+            </tr>
+            ${inRange.map(i => scoreRow(i, holes[i])).join('')}
+            <tr class="sc-subtotal">
+              <td colspan="4">IN</td>
+              ${players.map(p => `<td>${golfHoleTotal(p.name, inRange)}</td>`).join('')}
+            </tr>
+            <tr class="sc-total">
+              <td colspan="4">TOTAL</td>
+              ${players.map(p => `<td>${golfHoleTotal(p.name, allRange)}</td>`).join('')}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.querySelectorAll('.sc-input').forEach(input=>{
+      input.addEventListener('change', async ()=>{
+        const player = input.dataset.player;
+        const idx = parseInt(input.dataset.holeIdx, 10);
+        if(!golfData.scores) golfData.scores = {};
+        if(!golfData.scores[player]) golfData.scores[player] = new Array(18).fill('');
+        golfData.scores[player][idx] = input.value.trim();
+        renderGolfScorecardInto(container);
+        await saveGolf();
+      });
     });
   }
 
